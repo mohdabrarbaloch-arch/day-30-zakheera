@@ -1,0 +1,40 @@
+services:
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: zakheera
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-zakheera}
+      POSTGRES_DB: zakheera
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U zakheera -d zakheera"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  app:
+    build: .
+    ports:
+      - "8000:8000"
+    environment:
+      DATABASE_URL: postgresql+psycopg2://zakheera:${POSTGRES_PASSWORD:-zakheera}@db:5432/zakheera
+      # Fails loudly rather than booting with a guessable secret.
+      SECRET_KEY: ${SECRET_KEY:?SECRET_KEY is required - generate one with: python -c "import secrets; print(secrets.token_urlsafe(48))"}
+      ENVIRONMENT: production
+    depends_on:
+      db:
+        condition: service_healthy
+    healthcheck:
+      test:
+        - CMD
+        - python
+        - -c
+        - "import urllib.request,sys; sys.exit(0 if urllib.request.urlopen('http://127.0.0.1:8000/api/health').status == 200 else 1)"
+      interval: 15s
+      timeout: 5s
+      retries: 3
+      start_period: 20s
+
+volumes:
+  pgdata:

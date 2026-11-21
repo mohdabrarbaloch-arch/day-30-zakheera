@@ -1,0 +1,39 @@
+[project]
+name = "zakheera"
+version = "1.0.0"
+description = "A retrieval-augmented knowledge base that cites its sources and knows when to say it doesn't know."
+requires-python = ">=3.11"
+license = { text = "MIT" }
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+extend-exclude = ["app/static"]
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "N", "UP", "B", "C4", "SIM", "RUF"]
+ignore = [
+    # B008: FastAPI's Depends()/Query() in argument defaults is the
+    # framework's idiom, not a bug.
+    "B008",
+    # The corpus is bilingual. Urdu uses the Arabic full stop (۔) and the
+    # Arabic comma, and the docs use en dashes. Ruff reads these as typos in
+    # ASCII; they are the correct characters.
+    "RUF001",
+    "RUF002",
+    "RUF003",
+]
+
+[tool.ruff.lint.per-file-ignores]
+# Tests and scripts import the app after setting environment variables, which
+# must happen first, so module-level imports cannot all be at the top.
+"tests/*" = ["E402"]
+"scripts/*" = ["E402"]
+
+[tool.ruff.lint.isort]
+known-first-party = ["app"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-q"
+filterwarnings = ["ignore::DeprecationWarning"]
